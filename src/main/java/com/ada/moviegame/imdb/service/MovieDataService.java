@@ -8,6 +8,7 @@ import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -21,7 +22,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class LoadMovieDataService {
+public class MovieDataService {
 
   private final MovieDataRepository movieDataRepository;
 
@@ -38,6 +39,18 @@ public class LoadMovieDataService {
   };
 
   private static final String MOVIES_CSV = "filtered_movie_data.csv";
+
+  public String getRandomMovieImdbId() {
+    long savedMovieCount = movieDataRepository.count();
+    long movieId = getRandomMovieId(savedMovieCount);
+    log.info("searching movie with id {}", movieId);
+    return movieDataRepository.findById((int) movieId).get().getImdbId();
+  }
+
+  private long getRandomMovieId(long maxMovieId) {
+    long min = 1;
+    return new Random().nextLong(maxMovieId - min + 1) + min;
+  }
 
   public void insertMovieData() {
     List<MovieData> movieDataList = loadMovies();
@@ -65,7 +78,7 @@ public class LoadMovieDataService {
   private static Function<Iterable<CSVRecord>, List<MovieData>> mapMovieData() {
     return rs ->
         StreamSupport.stream(rs.spliterator(), false)
-            .map(LoadMovieDataService::buildMovieData)
+            .map(MovieDataService::buildMovieData)
             .collect(Collectors.toList());
   }
 

@@ -17,12 +17,22 @@ public class SecurityConfig {
   private final JWTAuthFilter jwtAuthFilter;
   private final AuthenticationProvider authenticationProvider;
 
+  private static final String[] AUTH_WHITE_LIST = {
+    "/auth/**",
+    "/actuator/**",
+    "/v3/api-docs/**",
+    "/swagger-ui/**",
+    "/swagger-ui.html/**",
+    "/v2/api-docs/**",
+    "/swagger-resources/**"
+  };
+
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     http.csrf()
         .disable()
         .authorizeHttpRequests()
-        .requestMatchers("/auth/**")
+        .requestMatchers(AUTH_WHITE_LIST)
         .permitAll()
         .anyRequest()
         .authenticated()

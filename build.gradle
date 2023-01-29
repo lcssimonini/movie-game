@@ -120,7 +120,7 @@ task migrateTestDatabase(type: Exec) {
 	commandLine './gradlew',  'update', '-PrunList=test'
 }
 
-dockerCompose.isRequiredBy(test)
+// dockerCompose.isRequiredBy(test)
 test {
 	doFirst {
 		migrateTestDatabase

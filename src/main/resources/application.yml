@@ -29,3 +29,6 @@ feign:
     config:
       default:
         loggerLevel: full
+
+game:
+  max-allowed-errors: 3

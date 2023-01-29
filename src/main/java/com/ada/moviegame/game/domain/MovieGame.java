@@ -1,8 +1,13 @@
 package com.ada.moviegame.game.domain;
 
+import static jakarta.persistence.FetchType.EAGER;
+
+import com.ada.moviegame.exception.NotFoundException;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
+import java.util.function.Predicate;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -17,11 +22,17 @@ public class MovieGame {
 
   @Id @GeneratedValue private Integer id;
   private String username;
-  private LocalDateTime startedAt;
   private Integer score;
   private boolean finished;
+  private LocalDateTime startedAt;
+  private LocalDateTime finishedAt;
 
-  @OneToMany(mappedBy = "movieGame", cascade = CascadeType.ALL, orphanRemoval = true)
+  @PrePersist
+  public void prePersist() {
+    this.startedAt = LocalDateTime.now();
+  }
+
+  @OneToMany(mappedBy = "movieGame", cascade = CascadeType.ALL, orphanRemoval = true, fetch = EAGER)
   private List<MovieGameTurn> gameTurns;
 
   public long calculateScore() {
@@ -32,7 +43,60 @@ public class MovieGame {
     return gameTurns.stream().filter(movieGameTurn -> !movieGameTurn.isScored()).count();
   }
 
+  public boolean canCreateNewTurn(Integer maxAllowedErrors) {
+    return noUnplayedTurns() && !maxErrorsReached(maxAllowedErrors);
+  }
+
+  private boolean noUnplayedTurns() {
+    return getGameTurns().stream().noneMatch(Predicate.not(MovieGameTurn::alreadyPlayed));
+  }
+
+  public boolean maxErrorsReached(Integer maxAllowedErrors) {
+    return getGameTurns().stream()
+            .filter(movieGameTurn -> movieGameTurn.alreadyPlayed() && !movieGameTurn.isScored())
+            .count()
+        >= maxAllowedErrors;
+  }
+
+  public List<String> getMovieAlreadyPlayedList(String movieId) {
+    return getGameTurns().stream()
+        .filter(movieGameTurn -> movieGameTurn.containsImdbMovieId(movieId))
+        .map(movieGameTurn -> movieGameTurn.getOpositor(movieId))
+        .toList();
+  }
+
   public static MovieGame buildNewMovieGame(String username) {
-    return MovieGame.builder().username(username).startedAt(LocalDateTime.now()).build();
+    return MovieGame.builder().username(username).build();
+  }
+
+  public MovieGameTurn getLatestNotPlayedTurn() {
+    List<MovieGameTurn> gameTurns = getGameTurns();
+    return gameTurns.stream()
+        .filter(movieGameTurn -> !movieGameTurn.alreadyPlayed())
+        .max(Comparator.comparing(MovieGameTurn::getStartedAt))
+        .orElseGet(() -> gameTurns.get(gameTurns.size() - 1));
+  }
+
+  public void addGameTurn(MovieGameTurn movieGameTurn) {
+    this.getGameTurns().add(movieGameTurn);
+  }
+
+  public MovieGameTurn getGameTurn(Integer gameTurnId) {
+    return getGameTurns().stream()
+        .filter(movieGameTurn -> movieGameTurn.getId().equals(gameTurnId))
+        .findFirst()
+        .orElseThrow(NotFoundException::new);
+  }
+
+  public void finish() {
+    if (!this.isFinished()) {
+      this.finished = true;
+      this.score = getGameScore();
+      this.setFinishedAt(LocalDateTime.now());
+    }
+  }
+
+  private int getGameScore() {
+    return (int) getGameTurns().stream().filter(MovieGameTurn::isScored).count();
   }
 }
