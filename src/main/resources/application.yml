@@ -18,3 +18,14 @@ logging:
       ttddyy:
         dsproxy:
           listener: debug
+
+client:
+  imdb:
+    url: http://www.omdbapi.com/
+    api-key: d90394bb
+
+feign:
+  client:
+    config:
+      default:
+        loggerLevel: full
