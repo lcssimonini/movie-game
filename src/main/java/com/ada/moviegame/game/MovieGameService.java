@@ -51,7 +51,9 @@ public class MovieGameService {
 
   public MovieGame getMovieGame(Integer id) {
     log.info("Search movie Game with id {}", id);
-    return movieGameRepository.findById(id).orElseThrow(NotFoundException::new);
+    return movieGameRepository
+        .findById(id)
+        .orElseThrow(() -> new NotFoundException("game with id " + id + " does not exist"));
   }
 
   public MovieGameTurn newMovieGameTurn(Integer movieGameId) {
@@ -91,7 +93,7 @@ public class MovieGameService {
     if (!movieGame.maxErrorsReached(maxAllowedErrors)) {
       return playMovieGameTurn(gameTurnId, option, movieGame);
     }
-    throw new GameEndedException();
+    throw new GameEndedException("game with id " + movieGameId + " already ended");
   }
 
   private MovieGameTurn playMovieGameTurn(
@@ -138,7 +140,8 @@ public class MovieGameService {
   private void validateAuthenticatedUser(MovieGame movieGame) {
     String username = getAuthenticatedUsername();
     if (!movieGame.getUsername().equals(username)) {
-      throw new WrongUserException();
+      throw new WrongUserException(
+          "game with id " + movieGame.getId() + " belongs to another user");
     }
   }
 }

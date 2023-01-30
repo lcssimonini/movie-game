@@ -86,7 +86,8 @@ public class MovieGame {
     return getGameTurns().stream()
         .filter(movieGameTurn -> movieGameTurn.getId().equals(gameTurnId))
         .findFirst()
-        .orElseThrow(NotFoundException::new);
+        .orElseThrow(
+            () -> new NotFoundException("game turn with id " + gameTurnId + " does not exist"));
   }
 
   public void finish() {

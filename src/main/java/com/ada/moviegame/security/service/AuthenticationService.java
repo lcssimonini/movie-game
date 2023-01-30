@@ -39,7 +39,7 @@ public class AuthenticationService {
   private void validatePassword(RegisterRequest request) {
     if (!request.password().equals(request.passwordConfirmation())) {
       log.error("provided passwords do not match");
-      throw new PasswordConfirmationException();
+      throw new PasswordConfirmationException("password and confirmation does not match");
     }
   }
 

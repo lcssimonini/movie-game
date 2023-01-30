@@ -100,7 +100,7 @@ jacocoTestReport {
 
 // dockerCompose.isRequiredBy(test)
 
-//dockerCompose.isRequiredBy(bootRun)
+// dockerCompose.isRequiredBy(bootRun)
 
 sonarqube {
 	properties {
@@ -113,6 +113,7 @@ sonarqube {
 				"**/com/ada/moviegame/configuration/**",
 				"**/com/ada/moviegame/security/**",
 				"**/com/ada/moviegame/exception/**",
+				"**/com/ada/moviegame/imdb/**",
 				"**/com/ada/moviegame/MovieGameApplication.java"
 		]
 	}

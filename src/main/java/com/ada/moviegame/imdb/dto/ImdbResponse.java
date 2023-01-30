@@ -33,6 +33,6 @@ public class ImdbResponse {
   }
 
   private boolean ratingsInfoNotAvailable() {
-    return getImdbRating().equals(NOT_AVAILABLE) || getImdbVotes().equals(NOT_AVAILABLE);
+    return NOT_AVAILABLE.equals(getImdbRating()) || NOT_AVAILABLE.equals(getImdbVotes());
   }
 }
