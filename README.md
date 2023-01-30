@@ -2,11 +2,11 @@
 
 Api to play movie game
 
-### Sonarcloud report
+### Relatorio Sonarcloud
 
 * [movie-game](https://sonarcloud.io/summary/overall?id=lcssimonini_movie-game)
 
-### Run the application
+### rodar a aplicacao localmente
 
 Primeiro, rode o container do banco de dados utilizando o docker compose na raiz do projeto:
 
@@ -16,7 +16,7 @@ Agora, rode a aplicaçao, o makefile está na raiz do projeto:
 
     make start-app
 
-### How to play
+### Como jogar
 
 primeiramente, crie um usuário:
 
