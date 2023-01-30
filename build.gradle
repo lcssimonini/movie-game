@@ -109,6 +109,7 @@ sonarqube {
 		property "sonar.host.url", "https://sonarcloud.io"
 		property "sonar.exclusions", [
 				"**/com/ada/moviegame/game/domain/projection/**",
+				"**/com/ada/moviegame/game/controller/dto/**",
 				"**/com/ada/moviegame/game/MovieGameRepository.java",
 				"**/com/ada/moviegame/configuration/**",
 				"**/com/ada/moviegame/security/**",

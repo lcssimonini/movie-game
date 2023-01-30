@@ -5,6 +5,7 @@ import static jakarta.persistence.FetchType.EAGER;
 import com.ada.moviegame.exception.NotFoundException;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.Predicate;
@@ -32,8 +33,9 @@ public class MovieGame {
     this.startedAt = LocalDateTime.now();
   }
 
+  @Builder.Default
   @OneToMany(mappedBy = "movieGame", cascade = CascadeType.ALL, orphanRemoval = true, fetch = EAGER)
-  private List<MovieGameTurn> gameTurns;
+  private List<MovieGameTurn> gameTurns = new ArrayList<>();
 
   public long calculateScore() {
     return gameTurns.stream()
@@ -52,7 +54,8 @@ public class MovieGame {
   }
 
   private boolean noUnplayedTurns() {
-    return getGameTurns().stream().noneMatch(Predicate.not(MovieGameTurn::alreadyPlayed));
+    return getGameTurns() == null
+        || getGameTurns().stream().noneMatch(Predicate.not(MovieGameTurn::alreadyPlayed));
   }
 
   public boolean maxErrorsReached(Integer maxAllowedErrors) {
