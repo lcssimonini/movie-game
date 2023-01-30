@@ -36,11 +36,15 @@ public class MovieGame {
   private List<MovieGameTurn> gameTurns;
 
   public long calculateScore() {
-    return gameTurns.stream().filter(MovieGameTurn::isScored).count();
+    return gameTurns.stream()
+        .filter(movieGameTurn -> movieGameTurn.alreadyPlayed() && movieGameTurn.isScored())
+        .count();
   }
 
   public long calculateErrors() {
-    return gameTurns.stream().filter(movieGameTurn -> !movieGameTurn.isScored()).count();
+    return gameTurns.stream()
+        .filter(movieGameTurn -> movieGameTurn.alreadyPlayed() && !movieGameTurn.isScored())
+        .count();
   }
 
   public boolean canCreateNewTurn(Integer maxAllowedErrors) {
@@ -52,10 +56,7 @@ public class MovieGame {
   }
 
   public boolean maxErrorsReached(Integer maxAllowedErrors) {
-    return getGameTurns().stream()
-            .filter(movieGameTurn -> movieGameTurn.alreadyPlayed() && !movieGameTurn.isScored())
-            .count()
-        >= maxAllowedErrors;
+    return calculateErrors() >= maxAllowedErrors;
   }
 
   public List<String> getMovieAlreadyPlayedList(String movieId) {

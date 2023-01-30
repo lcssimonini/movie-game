@@ -47,21 +47,10 @@ dependencies {
 	implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.12.0'
 	implementation group: 'org.apache.commons', name: 'commons-csv', version: '1.8'
 
-//	liquibaseRuntime group: 'org.liquibase.ext', name: 'liquibase-hibernate5', version: '4.17.0'
-//	liquibaseRuntime 'info.picocli:picocli:4.6.3'
-//	liquibaseRuntime 'org.liquibase:liquibase-core'
-//	liquibaseRuntime group: 'org.postgresql', name: 'postgresql', version: '42.5.0'
-//	liquibaseRuntime 'org.yaml:snakeyaml:1.33'
-//	liquibaseRuntime 'org.springframework.boot:spring-boot'
-//	liquibaseRuntime 'org.springframework:spring-orm'
-//	liquibaseRuntime 'javax.xml.bind:jaxb-api'
-//	liquibaseRuntime 'org.hibernate:hibernate-core'
-//	liquibaseRuntime sourceSets.main.output
+	implementation 'org.springdoc:springdoc-openapi-ui:1.6.14'
 
-	implementation 'org.springdoc:springdoc-openapi-ui:1.6.11'
 	implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
 
-//	implementation 'io.jsonwebtoken:jjwt:0.9.1'
 	implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
 	implementation 'io.jsonwebtoken:jjwt-impl:0.11.5'
 	implementation 'io.jsonwebtoken:jjwt-jackson:0.11.5'
@@ -71,13 +60,10 @@ dependencies {
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.security:spring-security-test'
-//	testImplementation 'org.testcontainers:junit-jupiter'
-//	testImplementation 'org.testcontainers:postgresql'
 }
 
 dependencyManagement {
 	imports {
-//		mavenBom "org.testcontainers:testcontainers-bom:${testcontainersVersion}"
 		mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
 	}
 }
@@ -112,55 +98,22 @@ jacocoTestReport {
 	dependsOn test
 }
 
-diff.dependsOn compileJava
-diffChangeLog.dependsOn compileJava
-
-task migrateTestDatabase(type: Exec) {
-	println 'migrating local test database'
-	commandLine './gradlew',  'update', '-PrunList=test'
-}
-
 // dockerCompose.isRequiredBy(test)
-test {
-	doFirst {
-		migrateTestDatabase
-	}
-}
 
-liquibase {
-	activities {
-		doFirst {
-			if (!project.hasProperty('runList')) {
-				project.ext.runList = "diffMain"
-			}
-		}
-		main {
-			changeLogFile "src/main/resources/db/changelog/db.changelog-master.xml"
-			url "jdbc:postgresql://localhost:5432/storage-experiments"
-			username "postgres"
-			password "postgres"
-			driver "org.postgresql.Driver"
-		}
-		test {
-			changeLogFile "src/main/resources/db/changelog/db.changelog-master.xml"
-			url "jdbc:postgresql://localhost:5432/storage-experiments"
-			username "postgres"
-			password "postgres"
-			driver "org.postgresql.Driver"
-		}
-		diffMain {
-			changeLogFile "src/main/resources/db/changelog/sql/" + System.getenv('CHANGELOG_FILE_NAME')
-			url "jdbc:postgresql://localhost:5432/storage-experiments"
-			username "postgres"
-			password "postgres"
-			driver "org.postgresql.Driver"
-			referenceUrl "hibernate:spring:com.simonini.storage.domain?" +
-					"dialect=org.hibernate.dialect.PostgreSQLDialect&" +
-					"hibernate.physical_naming_strategy=" +
-					"org.springframework.boot.orm.jpa.hibernate.SpringPhysicalNamingStrategy&" +
-					"hibernate.implicit_naming_strategy=" +
-					"org.springframework.boot.orm.jpa.hibernate.SpringImplicitNamingStrategy"
-		}
+//dockerCompose.isRequiredBy(bootRun)
+
+sonarqube {
+	properties {
+		property "sonar.projectKey", "lcssimonini_${project.name}"
+		property "sonar.organization", "lcssimonini"
+		property "sonar.host.url", "https://sonarcloud.io"
+		property "sonar.exclusions", [
+				"**/com/ada/moviegame/game/domain/projection/**",
+				"**/com/ada/moviegame/game/MovieGameRepository.java",
+				"**/com/ada/moviegame/configuration/**",
+				"**/com/ada/moviegame/security/**",
+				"**/com/ada/moviegame/exception/**",
+				"**/com/ada/moviegame/MovieGameApplication.java"
+		]
 	}
-	runList = project.ext.runList
 }

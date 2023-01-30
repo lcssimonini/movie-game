@@ -51,7 +51,7 @@ public class GameController {
     return GameTurnResponse.from(movieGameTurn);
   }
 
-  @GetMapping
+  @GetMapping("/ranking")
   public List<GameRankingResponse> getGameRanking() {
     return movieGameService.getRanking();
   }
