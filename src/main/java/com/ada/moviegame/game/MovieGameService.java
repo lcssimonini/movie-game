@@ -5,11 +5,16 @@ import static com.ada.moviegame.game.domain.MovieGameTurn.buildMovieGameTurn;
 
 import com.ada.moviegame.exception.GameEndedException;
 import com.ada.moviegame.exception.NotFoundException;
+import com.ada.moviegame.exception.WrongUserException;
+import com.ada.moviegame.game.controller.dto.GameRankingResponse;
 import com.ada.moviegame.game.controller.dto.WinnerOption;
 import com.ada.moviegame.game.domain.MovieGame;
 import com.ada.moviegame.game.domain.MovieGameTurn;
+import com.ada.moviegame.game.domain.projection.MovieGameTotalScore;
 import com.ada.moviegame.imdb.service.ImdbService;
 import com.ada.moviegame.imdb.service.MovieDataService;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,8 +36,7 @@ public class MovieGameService {
   private Integer maxAllowedErrors;
 
   public MovieGame newMovieGame() {
-    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    String authenticatedUserName = authentication.getName();
+    String authenticatedUserName = getAuthenticatedUsername();
     log.info("Authenticated user {}", authenticatedUserName);
 
     return movieGameRepository
@@ -52,6 +56,7 @@ public class MovieGameService {
 
   public MovieGameTurn newMovieGameTurn(Integer movieGameId) {
     MovieGame movieGame = getMovieGame(movieGameId);
+    validateAuthenticatedUser(movieGame);
     if (movieGame.canCreateNewTurn(maxAllowedErrors)) {
       return createMovieGameTurn(movieGameId, movieGame);
     }
@@ -82,6 +87,7 @@ public class MovieGameService {
 
   public MovieGameTurn playGameTurn(Integer movieGameId, Integer gameTurnId, WinnerOption option) {
     MovieGame movieGame = getMovieGame(movieGameId);
+    validateAuthenticatedUser(movieGame);
     if (!movieGame.maxErrorsReached(maxAllowedErrors)) {
       return playMovieGameTurn(gameTurnId, option, movieGame);
     }
@@ -91,16 +97,48 @@ public class MovieGameService {
   private MovieGameTurn playMovieGameTurn(
       Integer gameTurnId, WinnerOption option, MovieGame movieGame) {
     MovieGameTurn movieGameTurn = movieGame.getGameTurn(gameTurnId);
+    if (!movieGameTurn.alreadyPlayed()) {
+      playMovieTurn(option, movieGame, movieGameTurn);
+    }
+    return movieGameTurn;
+  }
+
+  private void playMovieTurn(
+      WinnerOption option, MovieGame movieGame, MovieGameTurn movieGameTurn) {
     movieGameTurn.setScored(option);
     movieGameRepository.save(movieGame);
-    log.info("player movie turn {}", movieGameTurn);
-    return movieGameTurn;
+    log.info("played movie turn {}", movieGameTurn);
   }
 
   public MovieGame finishMovieGame(Integer movieGameId) {
     MovieGame movieGame = getMovieGame(movieGameId);
+    validateAuthenticatedUser(movieGame);
     movieGame.finish();
     log.info("finished game {}", movieGame);
     return movieGameRepository.save(movieGame);
+  }
+
+  public List<GameRankingResponse> getRanking() {
+    List<MovieGameTotalScore> totalScoreList = movieGameRepository.getTotalScoreByUser();
+    totalScoreList.sort(Comparator.comparing(MovieGameTotalScore::totalScore).reversed());
+    int position = 1;
+    List<GameRankingResponse> gameRankingResponseList = new ArrayList<>();
+    for (MovieGameTotalScore mgts : totalScoreList) {
+      gameRankingResponseList.add(
+          new GameRankingResponse(mgts.username(), mgts.totalScore(), position++));
+    }
+    return gameRankingResponseList;
+  }
+
+  private static String getAuthenticatedUsername() {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    return authentication.getName();
+  }
+
+  private void validateAuthenticatedUser(MovieGame movieGame) {
+    String username = getAuthenticatedUsername();
+    if (!movieGame.getUsername().equals(username)) {
+      throw new WrongUserException();
+    }
   }
 }

@@ -1,4 +1,3 @@
 package com.ada.moviegame.exception;
 
-public class WrongUserException extends Throwable {
-}
+public class WrongUserException extends RuntimeException {}

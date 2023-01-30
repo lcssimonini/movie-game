@@ -1,12 +1,14 @@
 package com.ada.moviegame.game.controller;
 
 import com.ada.moviegame.game.MovieGameService;
+import com.ada.moviegame.game.controller.dto.GameRankingResponse;
 import com.ada.moviegame.game.controller.dto.GameResponse;
 import com.ada.moviegame.game.controller.dto.GameTurnResponse;
 import com.ada.moviegame.game.controller.dto.PlayTurnRequest;
 import com.ada.moviegame.game.domain.MovieGameTurn;
 import com.ada.moviegame.imdb.dto.ImdbResponse;
 import com.ada.moviegame.imdb.service.ImdbService;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -47,6 +49,11 @@ public class GameController {
         movieGameService.playGameTurn(movieGameId, gameTurnId, playTurnRequest.getPlayOption());
     log.info("Game turn for game id {}: {}", movieGameId, movieGameTurn);
     return GameTurnResponse.from(movieGameTurn);
+  }
+
+  @GetMapping
+  public List<GameRankingResponse> getGameRanking() {
+    return movieGameService.getRanking();
   }
 
   @GetMapping("/movie")
